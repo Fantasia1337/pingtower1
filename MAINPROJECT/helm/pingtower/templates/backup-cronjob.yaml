@@ -1,0 +1,36 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pg-backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: pg-backup
+            image: postgres:15
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backup.postgres.passwordSecretName }}
+                  key: password
+            command:
+            - /bin/sh
+            - -c
+            - |
+              mkdir -p /backups && \
+              pg_dump -h {{ .Values.backup.postgres.host }} -p {{ .Values.backup.postgres.port }} -U {{ .Values.backup.postgres.user }} -d {{ .Values.backup.postgres.db }} > /backups/backup-$(date +"%Y%m%d%H%M%S").sql && \
+              find /backups -type f -mtime +{{ .Values.backup.retentionDays }} -delete
+            volumeMounts:
+            - name: backups
+              mountPath: /backups
+          volumes:
+          - name: backups
+            persistentVolumeClaim:
+              claimName: {{ .Values.backup.pvcName }}
+{{- end }} 

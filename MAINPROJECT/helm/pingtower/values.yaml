@@ -1,0 +1,33 @@
+image:
+  repository: yourrepo/pingtower
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 8000
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+env: []
+config: {}
+secrets: {}
+ingress:
+  enabled: false
+  className: ""
+  hosts: []
+  tls: []
+backup:
+  enabled: false
+  schedule: "0 3 * * *"
+  pvcName: "pg-backups"
+  retentionDays: 7
+  postgres:
+    host: postgres
+    port: 5432
+    user: user
+    passwordSecretName: "postgres-secret"
+    db: fastapi_db 

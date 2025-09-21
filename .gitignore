@@ -1,0 +1,12 @@
+# Keep only MAINPROJECT in the repository
+/*
+!/MAINPROJECT/
+!.gitignore
+
+# Explicit local-only ignores
+/.venv/
+
+# Common local files
+/.idea/
+/.vscode/
+.DS_Store 

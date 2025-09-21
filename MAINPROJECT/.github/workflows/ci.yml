@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r MAINPROJECT/requirements.txt
+      - name: Alembic upgrade (local URL)
+        env:
+          DB_URL: postgresql+psycopg://user:password@localhost:5432/fastapi_db
+        run: |
+          echo "Skipping real DB migration in CI placeholder"
+      - name: Lint (placeholder)
+        run: |
+          echo "lint placeholder"
+      - name: Build Docker image
+        run: |
+          docker build -t pingtower:ci MAINPROJECT
+      - name: Smoke tests
+        run: |
+          python MAINPROJECT/scripts/smoke_test.py
+      - name: Dependency scan (placeholder)
+        run: |
+          echo "scan placeholder"
+      # - name: Docker login & push (optional)
+      #   env:
+      #     REGISTRY: ghcr.io
+      #     IMAGE: ghcr.io/${{ github.repository }}/pingtower
+      #     TAG: latest
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     echo $GITHUB_TOKEN | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+      #     docker tag pingtower:ci $IMAGE:$TAG
+      #     docker push $IMAGE:$TAG 

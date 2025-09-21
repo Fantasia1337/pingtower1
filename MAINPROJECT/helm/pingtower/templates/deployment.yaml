@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pingtower
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pingtower
+  template:
+    metadata:
+      labels:
+        app: pingtower
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: pingtower
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 8000
+        env:{{ toYaml .Values.env | nindent 10 }}
+        envFrom:
+        - configMapRef:
+            name: pingtower-config
+        - secretRef:
+            name: pingtower-secret
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        resources: {{- toYaml .Values.resources | nindent 10 }}
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.5">
+    <title>PingTower</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Подключение Chart.js с defer (без integrity для избежания CSP ошибок) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+    <header class="card header-card">
+        <div class="header-wrapper">
+            <div class="tower-icon">
+                <img src="/static/images/cell-tower.png" alt="Вышка">
+                <span class="signal-dot"></span>
+            </div>
+            <h1>
+                <span class="ping">Ping</span>
+                <span class="tower">Tower</span>
+            </h1>
+        </div>
+    </header>
+    <!-- Тумблер темы в правом верхнем углу -->
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider"></div>
+        </label>
+        <span class="slider-label">Сменить тему</span>
+    </div>
+    <!-- Новая кнопка для перехода на страницу инцидентов -->
+    <button id="incidentsBtn" class="incidents-btn" onclick="window.location.href='/incidents-page'">
+        Все инциденты
+    </button>
+    <div id="notification" class="notification hidden"></div>
+    <!-- === Форма добавления сервиса === -->
+    <section class="card form-card">
+        <h2 class="card-title">Добавить сервис</h2>
+        <form id="serviceForm">
+            <div class="form-group">
+                <input type="text" id="name" placeholder="Название" required>
+                <input type="url" id="url" placeholder="URL (https://...)" required>
+                <input type="number" id="interval" placeholder="Интервал (сек)" min="60" value="60" required>
+                <input type="number" id="timeout" placeholder="Таймаут (сек)" min="1" value="5" required>
+                <button type="submit" id="addButton">Добавить</button>
+                <button type="button" id="refreshButton" class="refresh-btn">Обновить список</button>
+            </div>
+        </form>
+    </section>
+    <!-- === Список сервисов === -->
+    <section class="card table-card">
+        <h2 class="card-title">Сервисы</h2>
+        <!-- Добавляем элементы управления фильтрацией здесь -->
+        <div class="filter-controls">
+            <div class="filter-group">
+                <span class="filter-label">Фильтр по статусу:</span>
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">Все</option>
+                    <option value="up">UP</option>
+                    <option value="down">DOWN</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Поиск:</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию...">
+            </div>
+        </div>
+        <!-- Конец элементов управления фильтрацией -->
+        <table id="servicesTable">
+            <thead>
+                <tr>
+                    <th class="sortable" data-sort="name">Название <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort="url">URL <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort="status">Статус <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort="lastCheck">Последняя проверка <span class="sort-indicator"></span></th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="servicesList">
+                <!-- Сервисы будут добавлены сюда -->
+            </tbody>
+        </table>
+        <div id="emptyState" class="empty-state hidden">Пока пусто</div>
+    </section>
+
+    <!-- === Модальное окно редактирования === -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Редактировать сервис</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="editServiceForm" class="modal-form">
+                <input type="text" id="editName" placeholder="Название" required>
+                <input type="url" id="editUrl" placeholder="URL (https://...)" required>
+                <input type="number" id="editInterval" placeholder="Интервал (сек)" min="60" required>
+                <input type="number" id="editTimeout" placeholder="Таймаут (сек)" min="1" required>
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Скрипт для переключения тем -->
+    <script>
+        const toggleSwitch = document.querySelector('.theme-switch input[type="checkbox"]');
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme) {
+            document.documentElement.setAttribute('data-theme', currentTheme);
+            if (currentTheme === 'light') {
+                toggleSwitch.checked = true;
+            }
+        }
+        function switchTheme(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        toggleSwitch.addEventListener('change', switchTheme, false);
+    </script>
+
+    <!-- Модальное окно логов сервиса -->
+    <div id="logsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="logsTitle">Логи</h2>
+                <button class="close-modal" id="closeLogsBtn">&times;</button>
+            </div>
+            <div id="logsBody" class="modal-body">
+                <div class="spinner" style="margin: 12px auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной JS -->
+    <script type="module" src="/static/js/api.js?v=2"></script>
+    <script type="module" src="/static/js/app.js?v=2"></script>
+</body>
+</html>
